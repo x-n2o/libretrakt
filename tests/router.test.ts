@@ -14,9 +14,11 @@ describe("router", () => {
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(body).toContain("LibreTrakt");
     expect(body).toContain("https://github.com/x-n2o/libretrakt");
-    expect(body).toContain("https://img.shields.io/badge/Cloudflare%20Pages-deployed");
-    expect(body).toContain("https://img.shields.io/badge/CI%2FCD-GitHub%20Actions");
-    expect(body).toContain("/actions/workflows/ci.yml/badge.svg");
+    expect(body).toContain("https://img.shields.io/badge/GitHub-x--n2o%2Flibretrakt");
+    expect(body).not.toContain('aria-label="Project links"');
+    expect(body).not.toContain(">GitHub</a>");
+    expect(body).not.toContain("https://img.shields.io/badge/Cloudflare%20Pages-deployed");
+    expect(body).not.toContain("/actions/workflows/ci.yml/badge.svg");
     expect(body).toContain("/api/cal/euphoria.ics");
     expect(body).toContain("webcal://libretrakt.pages.dev/api/cal/all.ics");
     expect(body).toContain(

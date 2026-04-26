@@ -1,5 +1,14 @@
 # LibreTrakt
 
+[![GitHub repository](https://img.shields.io/badge/GitHub-x--n2o%2Flibretrakt-181717?logo=github&labelColor=555&logoColor=white)](https://github.com/x-n2o/libretrakt)
+[![CI status](https://github.com/x-n2o/libretrakt/actions/workflows/ci.yml/badge.svg)](https://github.com/x-n2o/libretrakt/actions/workflows/ci.yml)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&labelColor=555&logoColor=white)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-deployed-F38020?logo=cloudflare&labelColor=555&logoColor=white)](https://libretrakt.pages.dev)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&labelColor=555&logoColor=white)
+![pnpm](https://img.shields.io/badge/pnpm-10.33.2-F69220?logo=pnpm&labelColor=555&logoColor=white)
+![TMDb](https://img.shields.io/badge/TMDb-powered-01B4E4?labelColor=555)
+[![License: MIT](https://img.shields.io/badge/license-MIT-97CA00?labelColor=555)](LICENSE)
+
 LibreTrakt generates live, subscribable iCalendar feeds for TV shows.
 
 It is intentionally small: Cloudflare Pages Functions, TypeScript, TMDb, no database, no Trakt dependency, and no paid API. Calendar clients subscribe to normal `.ics` URLs and handle local timezone conversion themselves.
