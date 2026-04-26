@@ -33,6 +33,10 @@ describe("release time resolution", () => {
     expect(resolveDateTime({ ...baseShow, network: "Apple TV+" }, baseEpisode)).toBe("2026-04-26T07:00:00Z");
   });
 
+  it("uses the Apple TV strategy for TMDb's network label", () => {
+    expect(resolveDateTime({ ...baseShow, network: "Apple TV" }, baseEpisode)).toBe("2026-04-26T07:00:00Z");
+  });
+
   it("uses UTC midnight by default", () => {
     expect(resolveDateTime(baseShow, baseEpisode)).toBe("2026-04-26T00:00:00Z");
   });

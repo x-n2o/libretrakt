@@ -10,7 +10,6 @@ const show: Show = {
   slug: "example",
   title: "Example",
   tmdbId: 123,
-  network: "Apple TV+",
   source: "catalog",
 };
 
@@ -32,7 +31,7 @@ describe("tmdb client", () => {
       return Response.json({
         id: 123,
         name: "Example From TMDb",
-        networks: [{ id: 1, name: "Apple TV+" }],
+        networks: [{ id: 1, name: "Apple TV" }],
         seasons: [{ season_number: 0 }, { season_number: 1 }],
       });
     });
@@ -41,7 +40,7 @@ describe("tmdb client", () => {
 
     expect(episodes).toHaveLength(1);
     expect(episodes[0]).toMatchObject({
-      show: { title: "Example From TMDb", network: "Apple TV+" },
+      show: { title: "Example From TMDb", network: "Apple TV" },
       episode: { season: 1, number: 1, title: "First", air_date: "2026-04-24" },
       startsAt: "2026-04-24T07:00:00Z",
     });

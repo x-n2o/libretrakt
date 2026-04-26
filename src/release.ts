@@ -9,6 +9,7 @@ export const strategies: Record<ReleaseStrategy, string> = {
 
 export const platformStrategy: Record<string, ReleaseStrategy> = {
   HBO: "US_PRIMETIME",
+  "Apple TV": "GLOBAL_MIDNIGHT_PT",
   "Apple TV+": "GLOBAL_MIDNIGHT_PT",
   Netflix: "GLOBAL_MIDNIGHT_PT",
 };
