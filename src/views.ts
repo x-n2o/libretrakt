@@ -140,19 +140,20 @@ export function homepage(url: URL): string {
           for (const show of payload.results || []) {
             const feedUrl = new URL(show.feed, window.location.origin).href;
             const appleUrl = feedUrl.replace(/^https:\\/\\//, "webcal://");
-            const googleUrl = "https://calendar.google.com/calendar/render?cid=" + encodeURIComponent(feedUrl);
+            const googleUrl = "https://calendar.google.com/calendar/u/0/r?cid=" + encodeURIComponent(appleUrl);
             const item = document.createElement("li");
             item.innerHTML =
               '<span class="result-title"></span>' +
               '<a>ICS</a>' +
               '<a>Apple</a>' +
-              '<a>Google</a>';
+              '<a target="_blank" rel="noopener">Google</a>';
             item.querySelector(".result-title").textContent =
               show.title + (show.firstAirDate ? " (" + show.firstAirDate.slice(0, 4) + ")" : "");
             const links = item.querySelectorAll("a");
             links[0].href = feedUrl;
             links[1].href = appleUrl;
             links[2].href = googleUrl;
+            links[2].dataset.copyUrl = feedUrl;
             results.append(item);
           }
 
@@ -163,18 +164,26 @@ export function homepage(url: URL): string {
           results.textContent = "Search failed.";
         }
       });
+
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("a[data-copy-url]");
+
+        if (!link || !navigator.clipboard) return;
+
+        navigator.clipboard.writeText(link.dataset.copyUrl).catch(() => {});
+      });
     </script>
   </body>
 </html>`;
 }
 
 function feedLinks(feedUrl: string): string {
-  const googleUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feedUrl)}`;
   const appleUrl = feedUrl.replace(/^https:\/\//, "webcal://");
+  const googleUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(appleUrl)}`;
 
   return `<a href="${feedUrl}">ICS</a>
         <a href="${appleUrl}">Apple</a>
-        <a href="${googleUrl}">Google</a>`;
+        <a href="${googleUrl}" target="_blank" rel="noopener" data-copy-url="${feedUrl}">Google</a>`;
 }
 
 function escapeHtml(value: string): string {

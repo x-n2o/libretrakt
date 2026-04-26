@@ -107,6 +107,8 @@ Google Calendar accepts URL imports:
 https://libretrakt.pages.dev/api/cal/euphoria.ics
 ```
 
+The homepage's Google links use Google's `cid=webcal://...` subscribe flow and copy the HTTPS ICS URL to the clipboard. If Google opens an empty "From URL" form, paste the copied URL into the field.
+
 ## Develop
 
 Install dependencies with pnpm:
