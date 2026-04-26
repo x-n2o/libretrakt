@@ -2,6 +2,8 @@ export type RuntimeContext = {
   waitUntil?: (promise: Promise<unknown>) => void;
 };
 
+const CACHE_VERSION = "2026-04-26.2";
+
 export async function withEdgeCache(
   request: Request,
   context: RuntimeContext | undefined,
@@ -12,7 +14,7 @@ export async function withEdgeCache(
   }
 
   const cache = (globalThis.caches as CacheStorage & { default: Cache }).default;
-  const cacheKey = new Request(request.url, { method: "GET" });
+  const cacheKey = cacheRequest(request);
   const cached = await cache.match(cacheKey);
 
   if (cached) {
@@ -32,4 +34,11 @@ export async function withEdgeCache(
   }
 
   return response;
+}
+
+function cacheRequest(request: Request): Request {
+  const url = new URL(request.url);
+  url.searchParams.set("__libretrakt_cache", CACHE_VERSION);
+
+  return new Request(url, { method: "GET" });
 }
