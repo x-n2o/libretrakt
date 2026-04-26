@@ -4,6 +4,7 @@ import type {
   Episode,
   Show,
   ShowEpisode,
+  TmdbEpisode,
   TmdbSeasonDetails,
   TmdbSearchResponse,
   TmdbSearchResult,
@@ -19,6 +20,7 @@ export async function getShowEpisodes(
 ): Promise<ShowEpisode[]> {
   const details = await fetchTmdb<TmdbShowDetails>(env, `/tv/${show.tmdbId}`, fetcher);
   const resolvedShow = hydrateShow(show, details);
+  const defaultRuntimeMinutes = pickDefaultRuntimeMinutes(details);
   const seasons = details.seasons ?? [];
   const seasonNumbers = seasons
     .map((season) => season.season_number)
@@ -32,7 +34,7 @@ export async function getShowEpisodes(
   );
 
   return seasonDetails
-    .flatMap((season) => mapSeasonEpisodes(resolvedShow, season))
+    .flatMap((season) => mapSeasonEpisodes(resolvedShow, season, defaultRuntimeMinutes))
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.show.title.localeCompare(b.show.title));
 }
 
@@ -109,24 +111,34 @@ function hydrateShow(show: Show, details: TmdbShowDetails): Show {
   return hydrated;
 }
 
-function mapSeasonEpisodes(show: Show, season: TmdbSeasonDetails): ShowEpisode[] {
+function mapSeasonEpisodes(
+  show: Show,
+  season: TmdbSeasonDetails,
+  defaultRuntimeMinutes?: number,
+): ShowEpisode[] {
   return (season.episodes ?? [])
     .filter((episode) => episode.air_date)
     .map((episode) => {
-      const mappedEpisode = mapEpisode(show, season.season_number, episode);
-
-      return {
+      const mappedEpisode = mapEpisode(show, season.season_number, episode, defaultRuntimeMinutes);
+      const mappedShowEpisode: ShowEpisode = {
         show,
         episode: mappedEpisode,
         startsAt: resolveDateTime(show, mappedEpisode),
       };
+
+      if (mappedEpisode.runtimeMinutes) {
+        mappedShowEpisode.durationMinutes = mappedEpisode.runtimeMinutes;
+      }
+
+      return mappedShowEpisode;
     });
 }
 
 function mapEpisode(
   show: Show,
   seasonNumber: number,
-  episode: { episode_number: number; name: string; air_date: string | null },
+  episode: TmdbEpisode,
+  defaultRuntimeMinutes?: number,
 ): Episode {
   const airDate = episode.air_date;
 
@@ -143,6 +155,12 @@ function mapEpisode(
     air_date: airDate,
   };
 
+  const runtimeMinutes = normalizeRuntimeMinutes(episode.runtime) ?? defaultRuntimeMinutes;
+
+  if (runtimeMinutes) {
+    mapped.runtimeMinutes = runtimeMinutes;
+  }
+
   const exactRelease = show.exactReleases?.[exactReleaseKey];
 
   if (exactRelease) {
@@ -150,4 +168,30 @@ function mapEpisode(
   }
 
   return mapped;
+}
+
+function pickDefaultRuntimeMinutes(details: TmdbShowDetails): number | undefined {
+  for (const runtime of details.episode_run_time ?? []) {
+    const normalized = normalizeRuntimeMinutes(runtime);
+
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeRuntimeMinutes(value: unknown): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+
+  const rounded = Math.round(value);
+
+  if (!Number.isInteger(rounded) || rounded < 1) {
+    return undefined;
+  }
+
+  return rounded;
 }

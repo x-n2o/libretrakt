@@ -25,12 +25,14 @@ export type Episode = {
   title: string;
   air_date: string;
   exactRelease?: string;
+  runtimeMinutes?: number;
 };
 
 export type ShowEpisode = {
   show: Show;
   episode: Episode;
   startsAt: string;
+  durationMinutes?: number;
 };
 
 export type Env = {
@@ -54,6 +56,7 @@ export type TmdbShowDetails = {
   name: string;
   networks?: TmdbNetwork[];
   seasons?: TmdbSeasonSummary[];
+  episode_run_time?: number[];
 };
 
 export type TmdbSearchResult = {
@@ -72,6 +75,7 @@ export type TmdbEpisode = {
   name: string;
   air_date: string | null;
   overview?: string;
+  runtime?: number | null;
 };
 
 export type TmdbSeasonDetails = {

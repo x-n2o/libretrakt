@@ -24,6 +24,17 @@ describe("ics generation", () => {
     expect(eventSummary(item)).toBe("Euphoria S01E05 – 03 Bonnie and Clyde");
   });
 
+  it("uses episode runtime when available", () => {
+    const output = generateICS([
+      {
+        ...item,
+        episode: { ...item.episode, runtimeMinutes: 58 },
+      },
+    ]);
+
+    expect(output).toContain("DTEND:20190714T025800Z");
+  });
+
   it("creates calendar events with UTC start and alarm", () => {
     const output = generateICS([item], "Euphoria");
 
@@ -31,6 +42,7 @@ describe("ics generation", () => {
     expect(output).toContain("BEGIN:VEVENT");
     expect(output).toContain("DTSTART:20190714T020000Z");
     expect(output).toContain("SUMMARY:Euphoria S01E05 – 03 Bonnie and Clyde");
+    expect(output).toContain("DTEND:20190714T023000Z");
     expect(output).toContain("BEGIN:VALARM");
     expect(output).toContain("TRIGGER:-PT30M");
   });

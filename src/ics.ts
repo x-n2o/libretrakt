@@ -1,7 +1,7 @@
 import ical, { ICalAlarmType, ICalCalendarMethod } from "ical-generator";
 import type { ShowEpisode } from "./types.js";
 
-const eventDurationMinutes = 30;
+const defaultEventDurationMinutes = 30;
 
 export function generateICS(items: ShowEpisode[], name = "LibreTrakt"): string {
   const calendar = ical({
@@ -17,6 +17,7 @@ export function generateICS(items: ShowEpisode[], name = "LibreTrakt"): string {
 
   for (const item of items) {
     const start = new Date(item.startsAt);
+    const eventDurationMinutes = resolveEventDurationMinutes(item);
     const end = new Date(start.getTime() + eventDurationMinutes * 60 * 1000);
 
     const event = calendar.createEvent({
@@ -47,6 +48,20 @@ function eventDescription({ show, episode }: ShowEpisode): string {
 
 function eventId({ show, episode }: ShowEpisode): string {
   return `${show.slug}-s${pad(episode.season)}e${pad(episode.number)}@libretrakt`;
+}
+
+function resolveEventDurationMinutes(item: ShowEpisode): number {
+  const candidate = item.durationMinutes ?? item.episode.runtimeMinutes;
+
+  if (typeof candidate === "number" && Number.isFinite(candidate) && candidate > 0) {
+    const rounded = Math.round(candidate);
+
+    if (rounded > 0) {
+      return rounded;
+    }
+  }
+
+  return defaultEventDurationMinutes;
 }
 
 function pad(value: number): string {

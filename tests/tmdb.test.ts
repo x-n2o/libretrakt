@@ -33,6 +33,7 @@ describe("tmdb client", () => {
         name: "Example From TMDb",
         networks: [{ id: 1, name: "Apple TV" }],
         seasons: [{ season_number: 0 }, { season_number: 1 }],
+        episode_run_time: [52],
       });
     });
 
@@ -41,9 +42,36 @@ describe("tmdb client", () => {
     expect(episodes).toHaveLength(1);
     expect(episodes[0]).toMatchObject({
       show: { title: "Example From TMDb", network: "Apple TV" },
-      episode: { season: 1, number: 1, title: "First", air_date: "2026-04-24" },
+      episode: { season: 1, number: 1, title: "First", air_date: "2026-04-24", runtimeMinutes: 52 },
       startsAt: "2026-04-24T07:00:00Z",
+      durationMinutes: 52,
     });
+  });
+
+  it("prefers episode runtime over show default runtime", async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      const url = input.toString();
+
+      if (url.includes("/tv/123/season/1")) {
+        return Response.json({
+          season_number: 1,
+          episodes: [{ episode_number: 1, name: "Pilot", air_date: "2026-04-24", runtime: 43 }],
+        });
+      }
+
+      return Response.json({
+        id: 123,
+        name: "Example From TMDb",
+        seasons: [{ season_number: 1 }],
+        episode_run_time: [52],
+      });
+    });
+
+    const episodes = await getShowEpisodes(env, show, fetcher as typeof fetch);
+
+    expect(episodes).toHaveLength(1);
+    expect(episodes[0]?.durationMinutes).toBe(43);
+    expect(episodes[0]?.episode.runtimeMinutes).toBe(43);
   });
 
   it("searches TV shows", async () => {
