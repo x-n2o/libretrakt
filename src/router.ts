@@ -92,6 +92,12 @@ export function handleRequest(
   env: Env,
   context?: RuntimeContext,
 ): Promise<Response> {
+  if (request.method === "HEAD") {
+    return router
+      .fetch(asGetRequest(request) as LibreRequest, env, context)
+      .then((response) => new Response(null, response));
+  }
+
   return router.fetch(request as LibreRequest, env, context);
 }
 
@@ -105,4 +111,11 @@ export function normalizeIcsSlug(value: string): string | null {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unexpected error.";
+}
+
+function asGetRequest(request: Request): Request {
+  return new Request(request.url, {
+    headers: request.headers,
+    method: "GET",
+  });
 }
