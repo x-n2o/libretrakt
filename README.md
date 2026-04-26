@@ -165,6 +165,19 @@ The production URL is:
 https://libretrakt.pages.dev
 ```
 
+## CI/CD
+
+GitHub Actions runs tests, typechecking, and the production build on pull requests and pushes to `main`.
+
+Pushes to `main` deploy to Cloudflare Pages after verification passes. The project is a Cloudflare Pages Direct Upload project, so deployment is handled by Wrangler from GitHub Actions rather than by Cloudflare's Git integration.
+
+Required GitHub repository secrets:
+
+- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID for the Pages project.
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with `Account > Cloudflare Pages > Edit`.
+
+The runtime `TMDB_API_TOKEN` remains configured as a Cloudflare Pages secret with `pnpm run secret:tmdb`; it is not needed by GitHub Actions.
+
 ## Philosophy
 
 - Minimal
