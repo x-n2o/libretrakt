@@ -2,6 +2,7 @@ import { listCatalogShows } from "./shows.js";
 
 export function homepage(url: URL): string {
   const origin = url.origin;
+  const githubUrl = "https://github.com/x-n2o/libretrakt";
   const rows = listCatalogShows()
     .map((show) => {
       const feedUrl = `${origin}/api/cal/${show.slug}.ics`;
@@ -63,6 +64,34 @@ export function homepage(url: URL): string {
         margin-left: 10px;
       }
 
+      .intro-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .intro-links a {
+        margin-left: 0;
+      }
+
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 10px 0 28px;
+      }
+
+      .badges a {
+        line-height: 1;
+        margin-left: 0;
+      }
+
+      .badges img {
+        display: block;
+        height: 20px;
+      }
+
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -100,6 +129,24 @@ export function homepage(url: URL): string {
     <main>
       <h1>LibreTrakt</h1>
       <p>Live, subscribable iCalendar feeds for TV shows. No Trakt dependency, no database, no paid APIs, UTC-only.</p>
+      <nav class="intro-links" aria-label="Project links">
+        <a href="${githubUrl}" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="badges" aria-label="Project badges">
+        <a href="${githubUrl}" target="_blank" rel="noopener">
+          <img alt="GitHub repository" src="https://img.shields.io/badge/GitHub-x--n2o%2Flibretrakt-181717?logo=github">
+        </a>
+        <a href="${githubUrl}/actions/workflows/ci.yml" target="_blank" rel="noopener">
+          <img alt="CI status" src="${githubUrl}/actions/workflows/ci.yml/badge.svg">
+        </a>
+        <img alt="CI/CD" src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&amp;logoColor=white">
+        <a href="https://libretrakt.pages.dev" target="_blank" rel="noopener">
+          <img alt="Cloudflare Pages" src="https://img.shields.io/badge/Cloudflare%20Pages-deployed-F38020?logo=cloudflare&amp;logoColor=white">
+        </a>
+        <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&amp;logoColor=white">
+        <img alt="pnpm" src="https://img.shields.io/badge/pnpm-10.33.2-F69220?logo=pnpm&amp;logoColor=white">
+        <img alt="TMDb" src="https://img.shields.io/badge/TMDb-powered-01B4E4">
+      </div>
       <h2>Find a show</h2>
       <form id="search-form">
         <input id="search-input" name="q" type="search" minlength="2" placeholder="Search TMDb TV shows" required>
