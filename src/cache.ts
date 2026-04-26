@@ -2,7 +2,7 @@ export type RuntimeContext = {
   waitUntil?: (promise: Promise<unknown>) => void;
 };
 
-const CACHE_VERSION = "2026-04-26.2";
+const CACHE_VERSION = "2026-04-26.3";
 
 export async function withEdgeCache(
   request: Request,
