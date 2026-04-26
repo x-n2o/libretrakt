@@ -14,6 +14,10 @@ describe("router", () => {
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(body).toContain("LibreTrakt");
     expect(body).toContain("/api/cal/euphoria.ics");
+    expect(body).toContain("webcal://libretrakt.pages.dev/api/cal/all.ics");
+    expect(body).toContain(
+      "https://calendar.google.com/calendar/render?cid=https%3A%2F%2Flibretrakt.pages.dev%2Fapi%2Fcal%2Fall.ics",
+    );
   });
 
   it("serves HEAD requests with matching headers and no body", async () => {

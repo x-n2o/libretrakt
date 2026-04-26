@@ -5,14 +5,10 @@ export function homepage(url: URL): string {
   const rows = listCatalogShows()
     .map((show) => {
       const feedUrl = `${origin}/api/cal/${show.slug}.ics`;
-      const googleUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feedUrl)}`;
-      const appleUrl = feedUrl.replace(/^https:\/\//, "webcal://");
 
       return `<li>
         <strong>${escapeHtml(show.title)}</strong>
-        <a href="${feedUrl}">ICS</a>
-        <a href="${appleUrl}">Apple</a>
-        <a href="${googleUrl}">Google</a>
+        ${feedLinks(feedUrl)}
       </li>`;
     })
     .join("");
@@ -112,7 +108,7 @@ export function homepage(url: URL): string {
       <ul id="search-results"></ul>
       <h2>Starter feeds</h2>
       <ul>${rows}</ul>
-      <p><strong>All starter shows:</strong> <a href="${allUrl}">${allUrl}</a></p>
+      <p><strong>All starter shows:</strong> ${feedLinks(allUrl)}</p>
       <section class="examples">
         <h2>Any TMDb TV show</h2>
         <p>Use <code>/api/cal/tmdb-&lt;id&gt;.ics</code> for any TMDb TV series ID.</p>
@@ -170,6 +166,15 @@ export function homepage(url: URL): string {
     </script>
   </body>
 </html>`;
+}
+
+function feedLinks(feedUrl: string): string {
+  const googleUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feedUrl)}`;
+  const appleUrl = feedUrl.replace(/^https:\/\//, "webcal://");
+
+  return `<a href="${feedUrl}">ICS</a>
+        <a href="${appleUrl}">Apple</a>
+        <a href="${googleUrl}">Google</a>`;
 }
 
 function escapeHtml(value: string): string {

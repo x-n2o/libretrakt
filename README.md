@@ -13,6 +13,8 @@ Starter catalog:
 - Margo's Got Money Troubles: `/api/cal/margos-got-money-troubles.ics`
 - All starter shows: `/api/cal/all.ics`
 
+The homepage exposes raw ICS, Apple Calendar, and Google Calendar links for each starter show and for the all-starter feed.
+
 Any TMDb TV show can be used by ID:
 
 ```txt
