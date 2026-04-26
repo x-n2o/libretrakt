@@ -1,0 +1,54 @@
+import ical, { ICalAlarmType, ICalCalendarMethod } from "ical-generator";
+import type { ShowEpisode } from "./types.js";
+
+const eventDurationMinutes = 30;
+
+export function generateICS(items: ShowEpisode[], name = "LibreTrakt"): string {
+  const calendar = ical({
+    name,
+    prodId: {
+      company: "LibreTrakt",
+      product: "LibreTrakt",
+      language: "EN",
+    },
+  });
+
+  calendar.method(ICalCalendarMethod.PUBLISH);
+
+  for (const item of items) {
+    const start = new Date(item.startsAt);
+    const end = new Date(start.getTime() + eventDurationMinutes * 60 * 1000);
+
+    const event = calendar.createEvent({
+      id: eventId(item),
+      start,
+      end,
+      summary: eventSummary(item),
+      description: eventDescription(item),
+    });
+
+    event.createAlarm({
+      type: ICalAlarmType.display,
+      trigger: 30 * 60,
+      description: eventSummary(item),
+    });
+  }
+
+  return calendar.toString();
+}
+
+export function eventSummary({ show, episode }: ShowEpisode): string {
+  return `${show.title} S${pad(episode.season)}E${pad(episode.number)} – ${episode.title}`;
+}
+
+function eventDescription({ show, episode }: ShowEpisode): string {
+  return `${show.title} season ${episode.season}, episode ${episode.number}.`;
+}
+
+function eventId({ show, episode }: ShowEpisode): string {
+  return `${show.slug}-s${pad(episode.season)}e${pad(episode.number)}@libretrakt`;
+}
+
+function pad(value: number): string {
+  return value.toString().padStart(2, "0");
+}
