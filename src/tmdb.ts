@@ -20,7 +20,7 @@ export async function getShowEpisodes(
 ): Promise<ShowEpisode[]> {
   const details = await fetchTmdb<TmdbShowDetails>(env, `/tv/${show.tmdbId}`, fetcher);
   const resolvedShow = hydrateShow(show, details);
-  const defaultRuntimeMinutes = pickDefaultRuntimeMinutes(details);
+  const showRuntimeMinutes = inferRuntimeMinutes(details.episode_run_time);
   const seasons = details.seasons ?? [];
   const seasonNumbers = seasons
     .map((season) => season.season_number)
@@ -32,9 +32,18 @@ export async function getShowEpisodes(
       fetchTmdb<TmdbSeasonDetails>(env, `/tv/${show.tmdbId}/season/${seasonNumber}`, fetcher),
     ),
   );
+  const inferredShowRuntimeMinutes = inferRuntimeMinutes(
+    seasonDetails.flatMap((season) => season.episodes ?? []),
+  );
 
   return seasonDetails
-    .flatMap((season) => mapSeasonEpisodes(resolvedShow, season, defaultRuntimeMinutes))
+    .flatMap((season) => {
+      const inferredSeasonRuntimeMinutes = inferRuntimeMinutes(season.episodes ?? []);
+      const fallbackRuntimeMinutes =
+        inferredSeasonRuntimeMinutes ?? inferredShowRuntimeMinutes ?? showRuntimeMinutes;
+
+      return mapSeasonEpisodes(resolvedShow, season, fallbackRuntimeMinutes);
+    })
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.show.title.localeCompare(b.show.title));
 }
 
@@ -170,16 +179,30 @@ function mapEpisode(
   return mapped;
 }
 
-function pickDefaultRuntimeMinutes(details: TmdbShowDetails): number | undefined {
-  for (const runtime of details.episode_run_time ?? []) {
-    const normalized = normalizeRuntimeMinutes(runtime);
+function inferRuntimeMinutes(values: Array<TmdbEpisode | number> = []): number | undefined {
+  const runtimes = values
+    .map((value) => normalizeRuntimeMinutes(typeof value === "number" ? value : value.runtime))
+    .filter((runtime): runtime is number => runtime !== undefined)
+    .sort((a, b) => a - b);
 
-    if (normalized) {
-      return normalized;
-    }
+  if (runtimes.length === 0) {
+    return undefined;
   }
 
-  return undefined;
+  const midpoint = Math.floor(runtimes.length / 2);
+
+  if (runtimes.length % 2 === 1) {
+    return runtimes[midpoint];
+  }
+
+  const lower = runtimes[midpoint - 1];
+  const upper = runtimes[midpoint];
+
+  if (lower === undefined || upper === undefined) {
+    return undefined;
+  }
+
+  return Math.round((lower + upper) / 2);
 }
 
 function normalizeRuntimeMinutes(value: unknown): number | undefined {

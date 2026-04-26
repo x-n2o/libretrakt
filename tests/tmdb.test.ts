@@ -74,6 +74,72 @@ describe("tmdb client", () => {
     expect(episodes[0]?.episode.runtimeMinutes).toBe(43);
   });
 
+  it("infers missing runtimes from known episodes in the same season", async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      const url = input.toString();
+
+      if (url.includes("/tv/123/season/3")) {
+        return Response.json({
+          season_number: 3,
+          episodes: [
+            { episode_number: 1, name: "Premiere", air_date: "2026-04-12", runtime: 62 },
+            { episode_number: 2, name: "Second", air_date: "2026-04-19", runtime: 60 },
+            { episode_number: 3, name: "Third", air_date: "2026-04-26", runtime: null },
+          ],
+        });
+      }
+
+      return Response.json({
+        id: 123,
+        name: "Example From TMDb",
+        seasons: [{ season_number: 3 }],
+        episode_run_time: [],
+      });
+    });
+
+    const episodes = await getShowEpisodes(env, show, fetcher as typeof fetch);
+
+    expect(episodes).toHaveLength(3);
+    expect(episodes[2]?.durationMinutes).toBe(61);
+    expect(episodes[2]?.episode.runtimeMinutes).toBe(61);
+  });
+
+  it("infers missing runtimes from other known episodes when the season has no runtimes", async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      const url = input.toString();
+
+      if (url.includes("/tv/123/season/1")) {
+        return Response.json({
+          season_number: 1,
+          episodes: [
+            { episode_number: 1, name: "One", air_date: "2026-04-05", runtime: 54 },
+            { episode_number: 2, name: "Two", air_date: "2026-04-12", runtime: 60 },
+          ],
+        });
+      }
+
+      if (url.includes("/tv/123/season/3")) {
+        return Response.json({
+          season_number: 3,
+          episodes: [{ episode_number: 3, name: "Third", air_date: "2026-04-26", runtime: null }],
+        });
+      }
+
+      return Response.json({
+        id: 123,
+        name: "Example From TMDb",
+        seasons: [{ season_number: 1 }, { season_number: 3 }],
+        episode_run_time: [],
+      });
+    });
+
+    const episodes = await getShowEpisodes(env, show, fetcher as typeof fetch);
+
+    expect(episodes).toHaveLength(3);
+    expect(episodes[2]?.durationMinutes).toBe(57);
+    expect(episodes[2]?.episode.runtimeMinutes).toBe(57);
+  });
+
   it("searches TV shows", async () => {
     const fetcher = vi.fn(async () =>
       Response.json({
