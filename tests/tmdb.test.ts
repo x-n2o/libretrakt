@@ -43,7 +43,8 @@ describe("tmdb client", () => {
     expect(episodes[0]).toMatchObject({
       show: { title: "Example From TMDb", network: "Apple TV" },
       episode: { season: 1, number: 1, title: "First", air_date: "2026-04-24", runtimeMinutes: 52 },
-      startsAt: "2026-04-24T07:00:00Z",
+      startsAt: "2026-04-24T00:00:00",
+      timeZone: "America/Los_Angeles",
       durationMinutes: 52,
     });
   });

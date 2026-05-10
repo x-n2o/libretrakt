@@ -2,7 +2,7 @@ import { generateICS } from "./ics.js";
 import { getShowEpisodes } from "./tmdb.js";
 import type { Env, Show, ShowEpisode } from "./types.js";
 
-export const cacheHeader = "public, max-age=1800";
+export const cacheHeader = "public, max-age=3600";
 
 export function textResponse(
   body: string,

@@ -40,22 +40,22 @@ Custom bundles are stateless and deterministic:
 
 ## How it works
 
-LibreTrakt fetches TV metadata, seasons, and episodes from TMDb. It extracts season number, episode number, title, air date, and network, then emits UTC calendar events with a 30-minute alarm.
+LibreTrakt fetches TV metadata, seasons, and episodes from TMDb. It extracts season number, episode number, title, air date, and network, then emits calendar events with release-local timestamps and a 30-minute alarm.
 
 TMDb provides `air_date`, but not a release time. LibreTrakt resolves timestamps in this order:
 
 1. Exact per-episode timestamp, when configured.
 2. Per-show release-time override.
 3. Platform strategy.
-4. UTC midnight.
+4. Midnight without forcing UTC.
 
 Built-in strategies:
 
 ```ts
-US_PRIMETIME = "02:00:00Z";
-GLOBAL_MIDNIGHT_PT = "07:00:00Z";
-GLOBAL_MIDNIGHT_ET = "05:00:00Z";
-DEFAULT = "00:00:00Z";
+US_PRIMETIME = "21:00:00" (America/New_York);
+GLOBAL_MIDNIGHT_PT = "00:00:00" (America/Los_Angeles);
+GLOBAL_MIDNIGHT_ET = "00:00:00" (America/New_York);
+DEFAULT = "00:00:00" (floating, no timezone);
 ```
 
 Built-in platform mapping:
@@ -66,12 +66,12 @@ Apple TV+ -> GLOBAL_MIDNIGHT_PT
 Netflix -> GLOBAL_MIDNIGHT_PT
 ```
 
-All event timestamps are UTC in `YYYY-MM-DDTHH:mm:ssZ` form. LibreTrakt does not use local timezones.
+Event timestamps preserve human-readable IANA time zones (for example `America/Los_Angeles`) when a platform strategy is used. If no timezone is known, LibreTrakt uses floating midnight (`YYYY-MM-DDTHH:mm:ss`) and lets calendar clients resolve local display.
 
 Generated feeds and search responses are cached at the Cloudflare edge with:
 
 ```txt
-Cache-Control: public, max-age=1800
+Cache-Control: public, max-age=3600
 ```
 
 ## Add a show

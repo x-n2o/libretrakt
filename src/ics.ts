@@ -24,6 +24,7 @@ export function generateICS(items: ShowEpisode[], name = "LibreTrakt"): string {
       id: eventId(item),
       start,
       end,
+      timezone: item.timeZone ?? null,
       summary: eventSummary(item),
       description: eventDescription(item),
     });

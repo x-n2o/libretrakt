@@ -1,4 +1,4 @@
-import { resolveDateTime } from "./release.js";
+import { resolveDateTime, resolveReleaseTimeZone } from "./release.js";
 import type {
   Env,
   Episode,
@@ -129,11 +129,16 @@ function mapSeasonEpisodes(
     .filter((episode) => episode.air_date)
     .map((episode) => {
       const mappedEpisode = mapEpisode(show, season.season_number, episode, defaultRuntimeMinutes);
+      const timeZone = resolveReleaseTimeZone(show, mappedEpisode);
       const mappedShowEpisode: ShowEpisode = {
         show,
         episode: mappedEpisode,
         startsAt: resolveDateTime(show, mappedEpisode),
       };
+
+      if (timeZone) {
+        mappedShowEpisode.timeZone = timeZone;
+      }
 
       if (mappedEpisode.runtimeMinutes) {
         mappedShowEpisode.durationMinutes = mappedEpisode.runtimeMinutes;

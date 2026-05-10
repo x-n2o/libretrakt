@@ -32,6 +32,7 @@ export type ShowEpisode = {
   show: Show;
   episode: Episode;
   startsAt: string;
+  timeZone?: string;
   durationMinutes?: number;
 };
 

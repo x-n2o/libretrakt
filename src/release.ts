@@ -1,10 +1,17 @@
 import type { Episode, ReleaseStrategy, Show } from "./types.js";
 
 export const strategies: Record<ReleaseStrategy, string> = {
-  US_PRIMETIME: "02:00:00Z",
-  GLOBAL_MIDNIGHT_PT: "07:00:00Z",
-  GLOBAL_MIDNIGHT_ET: "05:00:00Z",
-  DEFAULT: "00:00:00Z",
+  US_PRIMETIME: "21:00:00",
+  GLOBAL_MIDNIGHT_PT: "00:00:00",
+  GLOBAL_MIDNIGHT_ET: "00:00:00",
+  DEFAULT: "00:00:00",
+};
+
+export const strategyTimeZone: Record<ReleaseStrategy, string | undefined> = {
+  US_PRIMETIME: "America/New_York",
+  GLOBAL_MIDNIGHT_PT: "America/Los_Angeles",
+  GLOBAL_MIDNIGHT_ET: "America/New_York",
+  DEFAULT: undefined,
 };
 
 export const platformStrategy: Record<string, ReleaseStrategy> = {
@@ -14,9 +21,14 @@ export const platformStrategy: Record<string, ReleaseStrategy> = {
   Netflix: "GLOBAL_MIDNIGHT_PT",
 };
 
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+const timePattern = /^\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})?$/;
+const isoDateTimePattern =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+
 export function resolveDateTime(show: Show, episode: Episode): string {
   if (episode.exactRelease) {
-    return normalizeIsoUtc(episode.exactRelease);
+    return normalizeIsoDateTime(episode.exactRelease);
   }
 
   if (show.releaseTime) {
@@ -29,24 +41,23 @@ export function resolveDateTime(show: Show, episode: Episode): string {
   return combineDateAndTime(episode.air_date, time);
 }
 
-export function combineDateAndTime(date: string, time: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error(`Invalid air date: ${date}`);
+export function resolveReleaseTimeZone(show: Show, episode: Episode): string | undefined {
+  if (episode.exactRelease || show.releaseTime) {
+    return undefined;
   }
 
-  if (!/^\d{2}:\d{2}:\d{2}Z$/.test(time)) {
-    throw new Error(`Invalid UTC time: ${time}`);
-  }
+  const strategy = show.network ? platformStrategy[show.network] : undefined;
 
-  return normalizeIsoUtc(`${date}T${time}`);
+  return strategy ? strategyTimeZone[strategy] : strategyTimeZone.DEFAULT;
 }
 
-export function normalizeIsoUtc(value: string): string {
-  const date = new Date(value);
+export function combineDateAndTime(date: string, time: string): string {
+  if (!isoDatePattern.test(date)) throw new Error(`Invalid air date: ${date}`);
+  if (!timePattern.test(time)) throw new Error(`Invalid release time: ${time}`);
+  return `${date}T${time}`;
+}
 
-  if (Number.isNaN(date.getTime())) {
-    throw new Error(`Invalid UTC timestamp: ${value}`);
-  }
-
-  return date.toISOString().replace(".000Z", "Z");
+export function normalizeIsoDateTime(value: string): string {
+  if (!isoDateTimePattern.test(value)) throw new Error(`Invalid timestamp: ${value}`);
+  return value;
 }
