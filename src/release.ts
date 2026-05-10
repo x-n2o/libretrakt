@@ -70,7 +70,15 @@ function localMidnightToUtc(date: string, timezone: string): string {
     throw new Error(`Invalid air date: ${date}`);
   }
 
-  const [year, month, day] = date.split("-").map(Number);
+  const [yearRaw, monthRaw, dayRaw] = date.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    throw new Error(`Invalid air date: ${date}`);
+  }
+
   const utcMidday = Date.UTC(year, month - 1, day, 12, 0, 0);
   const offsetMinutes = getTimezoneOffsetMinutes(utcMidday, timezone);
   const utcMillis = Date.UTC(year, month - 1, day, 0, 0, 0) - offsetMinutes * 60 * 1000;
@@ -91,8 +99,15 @@ function getTimezoneOffsetMinutes(timestamp: number, timezone: string): number {
   });
 
   const parts = dtf.formatToParts(new Date(timestamp));
-  const partValue = (type: Intl.DateTimeFormatPartTypes): number =>
-    Number(parts.find((part) => part.type === type)?.value);
+  const partValue = (type: Intl.DateTimeFormatPartTypes): number => {
+    const value = parts.find((part) => part.type === type)?.value;
+
+    if (value === undefined) {
+      throw new Error(`Missing ${type} while converting timezone ${timezone}`);
+    }
+
+    return Number(value);
+  };
 
   const localAsUtc = Date.UTC(
     partValue("year"),
