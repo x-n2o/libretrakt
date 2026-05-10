@@ -7,6 +7,11 @@ export const strategies: Record<ReleaseStrategy, string> = {
   DEFAULT: "00:00:00Z",
 };
 
+const strategyTimezone: Partial<Record<ReleaseStrategy, string>> = {
+  GLOBAL_MIDNIGHT_PT: "America/Los_Angeles",
+  GLOBAL_MIDNIGHT_ET: "America/New_York",
+};
+
 export const platformStrategy: Record<string, ReleaseStrategy> = {
   HBO: "US_PRIMETIME",
   "Apple TV": "GLOBAL_MIDNIGHT_PT",
@@ -24,9 +29,18 @@ export function resolveDateTime(show: Show, episode: Episode): string {
   }
 
   const strategy = show.network ? platformStrategy[show.network] : undefined;
-  const time = strategy ? strategies[strategy] : strategies.DEFAULT;
 
-  return combineDateAndTime(episode.air_date, time);
+  if (!strategy) {
+    return combineDateAndTime(episode.air_date, strategies.DEFAULT);
+  }
+
+  const timezone = strategyTimezone[strategy];
+
+  if (timezone) {
+    return localMidnightToUtc(episode.air_date, timezone);
+  }
+
+  return combineDateAndTime(episode.air_date, strategies[strategy]);
 }
 
 export function combineDateAndTime(date: string, time: string): string {
@@ -49,4 +63,60 @@ export function normalizeIsoUtc(value: string): string {
   }
 
   return date.toISOString().replace(".000Z", "Z");
+}
+
+function localMidnightToUtc(date: string, timezone: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error(`Invalid air date: ${date}`);
+  }
+
+  const [yearRaw, monthRaw, dayRaw] = date.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    throw new Error(`Invalid air date: ${date}`);
+  }
+
+  const utcMidday = Date.UTC(year, month - 1, day, 12, 0, 0);
+  const offsetMinutes = getTimezoneOffsetMinutes(utcMidday, timezone);
+  const utcMillis = Date.UTC(year, month - 1, day, 0, 0, 0) - offsetMinutes * 60 * 1000;
+
+  return normalizeIsoUtc(new Date(utcMillis).toISOString());
+}
+
+function getTimezoneOffsetMinutes(timestamp: number, timezone: string): number {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const parts = dtf.formatToParts(new Date(timestamp));
+  const partValue = (type: Intl.DateTimeFormatPartTypes): number => {
+    const value = parts.find((part) => part.type === type)?.value;
+
+    if (value === undefined) {
+      throw new Error(`Missing ${type} while converting timezone ${timezone}`);
+    }
+
+    return Number(value);
+  };
+
+  const localAsUtc = Date.UTC(
+    partValue("year"),
+    partValue("month") - 1,
+    partValue("day"),
+    partValue("hour"),
+    partValue("minute"),
+    partValue("second"),
+  );
+
+  return (localAsUtc - timestamp) / (60 * 1000);
 }

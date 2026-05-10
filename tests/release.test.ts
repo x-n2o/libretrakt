@@ -37,6 +37,13 @@ describe("release time resolution", () => {
     expect(resolveDateTime({ ...baseShow, network: "Apple TV" }, baseEpisode)).toBe("2026-04-26T07:00:00Z");
   });
 
+
+  it("uses DST-aware PT midnight conversion", () => {
+    expect(resolveDateTime({ ...baseShow, network: "Netflix" }, { ...baseEpisode, air_date: "2026-01-15" })).toBe(
+      "2026-01-15T08:00:00Z",
+    );
+  });
+
   it("uses UTC midnight by default", () => {
     expect(resolveDateTime(baseShow, baseEpisode)).toBe("2026-04-26T00:00:00Z");
   });
