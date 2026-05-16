@@ -44,6 +44,18 @@ describe("release time resolution", () => {
     );
   });
 
+  it("converts HBO Sunday primetime in ET to the correct UTC moment (EDT)", () => {
+    expect(
+      resolveDateTime({ ...baseShow, network: "HBO" }, { ...baseEpisode, air_date: "2026-05-17" }),
+    ).toBe("2026-05-18T01:00:00Z");
+  });
+
+  it("converts HBO primetime in ET to the correct UTC moment (EST)", () => {
+    expect(
+      resolveDateTime({ ...baseShow, network: "HBO" }, { ...baseEpisode, air_date: "2026-01-11" }),
+    ).toBe("2026-01-12T02:00:00Z");
+  });
+
   it("uses UTC midnight by default", () => {
     expect(resolveDateTime(baseShow, baseEpisode)).toBe("2026-04-26T00:00:00Z");
   });

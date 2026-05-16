@@ -6,7 +6,6 @@ export const catalogShows = [
     title: "Euphoria",
     tmdbId: 85552,
     network: "HBO",
-    releaseTime: "02:00:00Z",
   },
   {
     slug: "your-friends-neighbors",

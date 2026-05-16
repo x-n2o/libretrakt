@@ -1,15 +1,14 @@
 import type { Episode, ReleaseStrategy, Show } from "./types.js";
 
-export const strategies: Record<ReleaseStrategy, string> = {
-  US_PRIMETIME: "02:00:00Z",
-  GLOBAL_MIDNIGHT_PT: "07:00:00Z",
-  GLOBAL_MIDNIGHT_ET: "05:00:00Z",
-  DEFAULT: "00:00:00Z",
-};
+export type StrategyDefinition =
+  | { localTime: string; timezone: string }
+  | { utc: string };
 
-const strategyTimezone: Partial<Record<ReleaseStrategy, string>> = {
-  GLOBAL_MIDNIGHT_PT: "America/Los_Angeles",
-  GLOBAL_MIDNIGHT_ET: "America/New_York",
+export const strategies: Record<ReleaseStrategy, StrategyDefinition> = {
+  US_PRIMETIME: { localTime: "21:00:00", timezone: "America/New_York" },
+  GLOBAL_MIDNIGHT_PT: { localTime: "00:00:00", timezone: "America/Los_Angeles" },
+  GLOBAL_MIDNIGHT_ET: { localTime: "00:00:00", timezone: "America/New_York" },
+  DEFAULT: { utc: "00:00:00Z" },
 };
 
 export const platformStrategy: Record<string, ReleaseStrategy> = {
@@ -28,19 +27,10 @@ export function resolveDateTime(show: Show, episode: Episode): string {
     return combineDateAndTime(episode.air_date, show.releaseTime);
   }
 
-  const strategy = show.network ? platformStrategy[show.network] : undefined;
+  const strategyName = show.network ? platformStrategy[show.network] : undefined;
+  const strategy = strategies[strategyName ?? "DEFAULT"];
 
-  if (!strategy) {
-    return combineDateAndTime(episode.air_date, strategies.DEFAULT);
-  }
-
-  const timezone = strategyTimezone[strategy];
-
-  if (timezone) {
-    return localMidnightToUtc(episode.air_date, timezone);
-  }
-
-  return combineDateAndTime(episode.air_date, strategies[strategy]);
+  return resolveStrategyDateTime(episode.air_date, strategy);
 }
 
 export function combineDateAndTime(date: string, time: string): string {
@@ -65,23 +55,40 @@ export function normalizeIsoUtc(value: string): string {
   return date.toISOString().replace(".000Z", "Z");
 }
 
-function localMidnightToUtc(date: string, timezone: string): string {
+function resolveStrategyDateTime(date: string, strategy: StrategyDefinition): string {
+  if ("utc" in strategy) {
+    return combineDateAndTime(date, strategy.utc);
+  }
+
+  return localTimeToUtc(date, strategy.localTime, strategy.timezone);
+}
+
+function localTimeToUtc(date: string, time: string, timezone: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     throw new Error(`Invalid air date: ${date}`);
   }
 
+  if (!/^\d{2}:\d{2}:\d{2}$/.test(time)) {
+    throw new Error(`Invalid local time: ${time}`);
+  }
+
   const [yearRaw, monthRaw, dayRaw] = date.split("-");
+  const [hourRaw, minuteRaw, secondRaw] = time.split(":");
   const year = Number(yearRaw);
   const month = Number(monthRaw);
   const day = Number(dayRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const second = Number(secondRaw);
 
-  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
-    throw new Error(`Invalid air date: ${date}`);
+  if (![year, month, day, hour, minute, second].every(Number.isInteger)) {
+    throw new Error(`Invalid date or time: ${date} ${time}`);
   }
 
   const utcMidday = Date.UTC(year, month - 1, day, 12, 0, 0);
   const offsetMinutes = getTimezoneOffsetMinutes(utcMidday, timezone);
-  const utcMillis = Date.UTC(year, month - 1, day, 0, 0, 0) - offsetMinutes * 60 * 1000;
+  const utcMillis =
+    Date.UTC(year, month - 1, day, hour, minute, second) - offsetMinutes * 60 * 1000;
 
   return normalizeIsoUtc(new Date(utcMillis).toISOString());
 }
