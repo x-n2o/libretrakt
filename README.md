@@ -52,11 +52,13 @@ TMDb provides `air_date`, but not a release time. LibreTrakt resolves timestamps
 Built-in strategies:
 
 ```ts
-US_PRIMETIME = "02:00:00Z";
-GLOBAL_MIDNIGHT_PT = "07:00:00Z";
-GLOBAL_MIDNIGHT_ET = "05:00:00Z";
-DEFAULT = "00:00:00Z";
+US_PRIMETIME       = 21:00 America/New_York
+GLOBAL_MIDNIGHT_PT = 00:00 America/Los_Angeles
+GLOBAL_MIDNIGHT_ET = 00:00 America/New_York
+DEFAULT            = 00:00:00Z
 ```
+
+Local-time strategies are DST-aware: LibreTrakt resolves the IANA timezone offset for each episode's air date, so winter and summer episodes land on the right UTC moment.
 
 Built-in platform mapping:
 
